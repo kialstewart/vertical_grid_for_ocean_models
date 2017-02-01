@@ -1,9 +1,17 @@
 # build a vertical grid for ocean models
-# this is scripted for MOM which uses the "super grid"
-# the "super grid" is a netcdf variable called "zeta"
-# which is a vector of the depths at the top and middle of each cell
-# this vector is of length 2N-1 where N is the number of z levels in the model
 # the functional form of the vertical grid is hyperbolic tangent
+
+# this is scripted for MOM5 which uses the "super grid"
+# the "super grid" is a netcdf variable called "zeta"
+# which is a vector of the depths at the top, middle and bottom of each cell
+# this vector is of length 2N-1 where N is the number of z levels in the model
+
+
+# this also builds a regular grid
+# the regular grid is written to netcdf file as a variable called "v_grid"
+# v_grid is a vector of the depths at the top and bottom of each cell
+# this vector is of length N-1 where N is the number of z levels in the model
+
 
 # written by Kial Stewart
 # this script relates to the Ocean Modelling paper "Vertical resolution of baroclinic modes in global ocean models" by Stewart et al.
@@ -22,9 +30,13 @@ min_dz = 1.0
 # how sharp/gentle would you like the hyperbolic tangent (<1 is sharp, 1 is neutral, >1 is gentle)? this is used to "tune" the number of levels to an acceptable amount
 depfac = 1.03
 
-# what filename would you like?
+# what name would you like the super grid to have?
 
-grid_filename = "ocean_vertical_grid_for_MOM5.nc"
+super_grid_filename = "ocean_vertical_grid_for_MOM5.nc"
+
+# what name would you like the regular grid to have?
+
+regular_grid_filename = "ocean_vertical_grid.nc"
 
 ################
 # start the build
@@ -76,15 +88,25 @@ for zz in np.arange(len(real_prop_z)):
 for zz in np.arange(len(real_prop_z)-1):
 	super_vgrid[1+(zz*2)] = real_prop_z[zz+1] - ((real_prop_z[zz+1] - real_prop_z[zz])/2)
 
-eddyfile = nc.Dataset('./'+grid_filename, 'w', format='NETCDF4')
+eddyfile = nc.Dataset('./'+super_grid_filename, 'w', format='NETCDF4')
 eddyfile.createDimension('nzv', len(super_vgrid))
 zeta = eddyfile.createVariable('zeta','f8',('nzv',))
 zeta.units = 'meters'
 zeta.standard_name = 'vertical_grid_vertex'
-zeta.long_name = 'vgrid'
+zeta.long_name = 'vertical_super_grid_for_MOM5:_depth_at_the_top_and_middle_and_bottom_of_each_cell'
 zeta.author = 'Kial Stewart'
 eddyfile.variables['zeta'][:] = super_vgrid
 eddyfile.close()
 
-print "SUCCESS!! You now have a vertical grid of ", len(real_prop_z), " levels with grid spacing ranging from ", real_delta_z[0]," to ", real_delta_z[-1]," written to file ",grid_filename
+eddyfile = nc.Dataset('./'+regular_grid_filename, 'w', format='NETCDF4')
+eddyfile.createDimension('nzv', len(real_prop_z))
+v_grid = eddyfile.createVariable('v_grid','f8',('nzv',))
+v_grid.units = 'meters'
+v_grid.standard_name = 'vertical_grid'
+v_grid.long_name = 'vertical_grid_depth_at_top_and_bottom_of_each_cell'
+v_grid.author = 'Kial Stewart'
+eddyfile.variables['v_grid'][:] = real_prop_z
+eddyfile.close()
+
+print "SUCCESS!! You now have a vertical grid of ", len(real_prop_z)-1, " levels with grid spacing ranging from ", real_delta_z[0]," to ", real_delta_z[-1]," written to files ",super_grid_filename," and ",regular_grid_filename
 
