@@ -6,12 +6,10 @@
 # which is a vector of the depths at the top, middle and bottom of each cell
 # this vector is of length 2N-1 where N is the number of z levels in the model
 
-
 # this also builds a regular grid
 # the regular grid is written to netcdf file as a variable called "v_grid"
 # v_grid is a vector of the depths at the top and bottom of each cell
 # this vector is of length N-1 where N is the number of z levels in the model
-
 
 # written by Kial Stewart
 # this script relates to the Ocean Modelling paper "Vertical resolution of baroclinic modes in global ocean models" by Stewart et al.
